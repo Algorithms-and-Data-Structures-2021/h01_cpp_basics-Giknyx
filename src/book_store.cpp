@@ -11,42 +11,45 @@ ResizeStorageStatus resize_storage(Book *&storage, int size, int new_capacity) {
   if (size < 0) {
       return ResizeStorageStatus::NEGATIVE_SIZE;
   }
-  if (new_capacity < size) {
+  if (new_capacity <= size) {
       return ResizeStorageStatus::INSUFFICIENT_CAPACITY;
   }
-  Book *res = new Book[new_capacity];
+  auto *res = new Book[new_capacity];
   std::copy(storage, storage + size, res);
-  delete storage;
+  delete[] storage;
   storage = res;
   return ResizeStorageStatus::SUCCESS;
 }
 
 // 2. реализуйте конструктор ...
-BookStore::BookStore(const std::string &name) : name_{name} {
+BookStore::BookStore(const std::string &name) {
   // валидация аргумента
   if (name.empty()) {
     throw std::invalid_argument("BookStore::name must not be empty");
   }
-  storage_size_ = 0;
+  name_ = name;
   storage_capacity_ = kInitStorageCapacity;
   storage_ = new Book[storage_capacity_];
 }
 
 // 3. реализуйте деструктор ...
 BookStore::~BookStore() {
-  delete storage_;
+  delete[] storage_;
   storage_ = nullptr;
+  storage_size_ = 0;
+  storage_capacity_ = 0;
 }
 
 // 4. реализуйте метод ...
 void BookStore::AddBook(const Book &book) {
   if (storage_size_ == storage_capacity_) {
     ResizeStorageStatus status = resize_storage_internal(storage_capacity_ + kCapacityCoefficient);
-    if (status == ResizeStorageStatus::SUCCESS) {
-        storage_capacity_ += kCapacityCoefficient;
+    if (status != ResizeStorageStatus::SUCCESS) {
+        return;
     }
   }
   storage_[storage_size_] = book;
+  storage_size_++;
 }
 
 // РЕАЛИЗОВАНО
